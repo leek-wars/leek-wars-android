@@ -1,44 +1,114 @@
-<!-- The "package" attribute is rewritten by the Gradle build with the value of applicationId.
-     It is still required here, as it is used to derive paths, for instance when referring
-     to an Activity by ".MyActivity" instead of the full name. If more Activities are added to the
-     application, the package attribute will need to reflect the correct path in order to use
-     the abbreviated format. -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.placeholder">
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Delegation des notifications web -> notifications natives (Android 13+ : permission runtime). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/icon"
         android:label="${launcherName}"
         android:supportsRtl="true"
-        android:theme="@style/Theme.TwaSplash">
+        android:theme="@style/Theme.LeekWars">
 
+        <!-- Lien de confiance app <-> site (Digital Asset Links). -->
         <meta-data
             android:name="asset_statements"
             android:value="${assetStatements}" />
 
+        <!-- Manifeste PWA source (icones, nom, couleurs). -->
+        <meta-data
+            android:name="web_manifest_url"
+            android:value="https://leekwars.com/manifest.json" />
+
         <activity
-            android:name="android.support.customtabs.trusted.LauncherActivity"
+            android:name="com.google.androidbrowserhelper.trusted.LauncherActivity"
+            android:exported="true"
             android:label="${launcherName}">
-            <meta-data android:name="android.support.customtabs.trusted.DEFAULT_URL"
+
+            <meta-data
+                android:name="android.support.customtabs.trusted.DEFAULT_URL"
                 android:value="${defaultUrl}" />
 
+            <!-- Couleurs des barres systeme (clair / sombre). -->
             <meta-data
                 android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR"
                 android:resource="@color/colorPrimary" />
+            <meta-data
+                android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR_DARK"
+                android:resource="@color/colorPrimaryDark" />
+            <meta-data
+                android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR"
+                android:resource="@color/navigationColor" />
+            <meta-data
+                android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR_DARK"
+                android:resource="@color/navigationColorDark" />
+
+            <!-- Splash screen pendant l'ouverture de la TWA. -->
+            <meta-data
+                android:name="android.support.customtabs.trusted.SPLASH_IMAGE_DRAWABLE"
+                android:resource="@drawable/splash" />
+            <meta-data
+                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_BACKGROUND_COLOR"
+                android:resource="@color/backgroundColor" />
+            <meta-data
+                android:name="android.support.customtabs.trusted.SPLASH_SCREEN_FADE_OUT_DURATION"
+                android:value="@integer/splashScreenFadeOutDuration" />
+            <meta-data
+                android:name="android.support.customtabs.trusted.FILE_PROVIDER_AUTHORITY"
+                android:value="${applicationId}.fileprovider" />
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Ouvre aussi les liens https://leekwars.com directement dans l'app. -->
             <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW"/>
+                <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="https"
-                    android:host="${hostName}"/>
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="${hostName}" />
             </intent-filter>
         </activity>
+
+        <!-- "Gerer l'espace" -> renvoie vers le site. -->
+        <activity
+            android:name="com.google.androidbrowserhelper.trusted.ManageDataLauncherActivity"
+            android:alwaysRetainTaskState="true"
+            android:exported="false"
+            android:label="${launcherName}">
+            <meta-data
+                android:name="android.support.customtabs.trusted.MANAGE_SPACE_URL"
+                android:value="${defaultUrl}" />
+        </activity>
+
+        <!-- Recoit les notifications web depuis le navigateur de confiance. -->
+        <service
+            android:name="com.google.androidbrowserhelper.trusted.DelegationService"
+            android:exported="false">
+            <!-- Icone monochrome utilisee pour les notifications web deleguees (sinon icone generique). -->
+            <meta-data
+                android:name="android.support.customtabs.trusted.SMALL_ICON"
+                android:resource="@drawable/ic_notification" />
+            <intent-filter>
+                <action android:name="android.support.customtabs.trusted.TRUSTED_WEB_ACTIVITY_SERVICE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </service>
+
+        <!-- FileProvider pour servir l'image du splash au navigateur. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/filepaths" />
+        </provider>
     </application>
 </manifest>

@@ -1,45 +1,82 @@
-apply plugin: 'com.android.application'
+plugins {
+    id 'com.android.application'
+    id 'com.github.triplet.play'
+}
+
+// Identifiants de signature release + compte de service Play, lus depuis keystore.properties (gitignore).
+def keystorePropsFile = rootProject.file("keystore.properties")
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystoreProps.load(new FileInputStream(keystorePropsFile))
+}
 
 android {
-    compileSdkVersion 28
+    namespace "com.leekwars.app"
+    compileSdk 35
+
     defaultConfig {
         applicationId "com.leekwars.app"
-        minSdkVersion 16
-        targetSdkVersion 28
-        versionCode 2
-        versionName "1.0.1"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        manifestPlaceholders = [
-                // The hostname is used when building the intent-filter, so the TWA is able to
-                // handle Intents to open https://svgomg.firebaseapp.com.
-                hostName: "leekwars.com",
-                defaultUrl: "https://leekwars.com",
-                launcherName: "Leek Wars",
-                // This variable below expresses the relationship between the app and the site,
-                // as documented in the TWA documentation at
-                // https://developers.google.com/web/updates/2017/10/using-twa#set_up_digital_asset_links_in_an_android_app
-                // and is injected into the AndroidManifest.xml
-                assetStatements: '[{ "relation": ["delegate_permission/common.handle_all_urls"], ' +
-                        '"target": {"namespace": "web", "site": "https://leekwars.com"}}]'
-        ]
+        minSdk 21
+        targetSdk 35
+        versionCode 3
+        versionName "1.1.0"
 
-        // This attribute sets the status bar color for the TWA. It can be either set here or in
-        // `res/values/colors.xml`. Setting in both places is an error and the app will not
-        // compile. If not set, the status bar color defaults to #FFFFFF - white.
-        resValue "color", "colorPrimary", "#4b9e06"
+        // Injecte dans le AndroidManifest les parametres de la TWA.
+        manifestPlaceholders = [
+            hostName       : "leekwars.com",
+            defaultUrl     : "https://leekwars.com/",
+            launcherName   : "Leek Wars",
+            // Lien de confiance app <-> site (Digital Asset Links) ; doit matcher /.well-known/assetlinks.json.
+            assetStatements: '[{ "relation": ["delegate_permission/common.handle_all_urls"], ' +
+                    '"target": {"namespace": "web", "site": "https://leekwars.com"}}]'
+        ]
     }
+
+    signingConfigs {
+        release {
+            if (keystorePropsFile.exists()) {
+                storeFile file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
+            // Signe seulement si keystore.properties est present (build release local possible sans la cle).
+            if (keystorePropsFile.exists()) {
+                signingConfig signingConfigs.release
+            }
         }
     }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+// Selectionne un JDK 17 pour la compilation quel que soit le JDK par defaut de la machine (25 ici).
+// Portable (CI, autres postes) : pas de chemin en dur ; foojay (settings.gradle) le provisionne si absent.
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
 dependencies {
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'com.github.GoogleChrome.custom-tabs-client:customtabs:d08e93fce3'
+    // Support officiel des Trusted Web Activities (remplace l'ancien custom-tabs-client abandonne).
+    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.5.0'
+}
+
+play {
+    if (keystoreProps['serviceAccountFile'] != null) {
+        serviceAccountCredentials.set(file(keystoreProps['serviceAccountFile']))
+    }
+    track.set("internal")
+    defaultToAppBundles.set(true)
+    releaseStatus.set(com.github.triplet.gradle.androidpublisher.ReleaseStatus.DRAFT)
 }

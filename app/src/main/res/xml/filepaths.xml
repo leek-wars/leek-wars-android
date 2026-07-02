@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Dossier ou androidbrowserhelper depose l'image du splash a servir au navigateur. -->
+    <files-path
+        name="twa_splash"
+        path="twa_splash/" />
+</paths>

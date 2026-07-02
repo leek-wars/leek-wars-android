@@ -1,7 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Theme to create a blank screen while the TWA is opening -->
-    <style name="Theme.TwaSplash" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:windowNoTitle">true</item>
+    <!-- Theme de l'activite de lancement (splash), fond sombre = background_color de la PWA.
+         Theme.Material (API 21+) : pas besoin d'AppCompat, l'activite est transitoire. -->
+    <style name="Theme.LeekWars" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/backgroundColor</item>
         <item name="android:backgroundDimEnabled">false</item>
     </style>
+
+    <!-- Duree du fondu de sortie du splash (ms). -->
+    <integer name="splashScreenFadeOutDuration">300</integer>
 </resources>

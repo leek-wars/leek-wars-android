@@ -10,3 +10,11 @@
 /captures
 .externalNativeBuild
 /app/release
+
+# Identifiants de signature release + compte de service Play (jamais commites).
+keystore.properties
+*.keystore
+*.jks
+
+# Notes de travail internes (compte de service, procedures) - hors repo public.
+CLAUDE.md

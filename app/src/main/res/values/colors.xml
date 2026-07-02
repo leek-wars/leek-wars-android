@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- theme_color du manifeste PWA. -->
+    <color name="colorPrimary">#4b9e06</color>
+    <color name="colorPrimaryDark">#357004</color>
+    <!-- background_color du manifeste PWA (fond du splash + barre de navigation). -->
+    <color name="navigationColor">#333333</color>
+    <color name="navigationColorDark">#000000</color>
+    <color name="backgroundColor">#333333</color>
+</resources>
