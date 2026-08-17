@@ -1,0 +1,44 @@
+name: CI
+
+# L'application est une TWA : une coquille Android autour de leekwars.com. Elle ne
+# se touche que rarement, et c'est précisément le risque — une montée d'AGP ou de
+# SDK casse une application qu'on ne recompile plus, et on ne s'en aperçoit que le
+# jour d'une publication. Ce build de contrôle recompile à chaque poussée.
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # JDK 17 : c'est la toolchain déclarée par app/build.gradle. Le fournir ici
+      # évite que foojay aille le télécharger à chaque exécution.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # Le variant debug, et lui seul : le release exige keystore.properties, qui
+      # n'est pas dans le dépôt (et n'a rien à faire dans une CI de contrôle).
+      - name: Compiler l'APK de débogage
+        run: ./gradlew --no-daemon assembleDebug
+
+      - name: Analyse Lint
+        run: ./gradlew --no-daemon :app:lintDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk-debug
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
